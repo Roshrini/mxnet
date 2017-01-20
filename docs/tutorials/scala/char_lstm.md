@@ -1,0 +1,454 @@
+# Character-level language models
+
+This Scala tutorial shows how to train a character-level language model with a multilayer recurrent neural network. In particular, we will train a multilayer LSTM network that is able to generate President Obama's speeches.
+
+There are multiple blogposts which explains LSTM concepts beautifully. So, we won't go through detailed explanation here. If you are not familiar with the concept, please refer to following links first.
+- LSTM tutorial in julia (http://dmlc.ml/mxnet/2015/11/15/char-lstm-in-julia.html)
+- LSTM tutorial in python [here](https://github.com/dmlc/mxnet-notebooks/blob/master/python/tutorials/char_lstm.ipynb)
+- Christopher Olah's blogspot(http://colah.github.io/posts/2015-08-Understanding-LSTMs/)
+- Bucketing in MXNet(http://mxnet.io/how_to/bucketing.html)
+
+## How to Use This Tutorial
+
+1) You can run this tutorial from Scala command line by just copy pasting the code snippets given below. Please make appropriate file path changes.  
+
+2) Refer to this link for running LSTM Scala example (https://github.com/dmlc/mxnet/tree/master/scala-package/examples/src/main/scala/ml/dmlc/mxnet/examples/rnn)
+You can run this source code by running these scripts(https://github.com/dmlc/mxnet/tree/master/scala-package/examples/scripts/rnn)
+
+You will accomplish the following by going through this tutorial:
+
+- Build a LSTM network to learn from char only. At each time, input is a char.
+- Clean dataset
+- Train a model
+- Infer from the model. We will see this LSTM is able to learn words and grammers from sequence of chars.
+
+## Prerequisites
+
+To complete this tutorial, you need:
+
+- Please do install MXNet on your machine. Follow specific instructions according to your specific OS here [MXNet](//http://mxnet.io/get_started/setup.html#overview)
+- Scala 2.11.8
+- Maven
+
+## The Data
+
+We first download the dataset and check data format. We can download the data used in this tutorial from the [mxnet.io](http://data.mxnet.io/data/char_lstm.zip) site. To download the data:
+
+1. At the command prompt, type:
+
+    wget http://data.mxnet.io/data/char_lstm.zip
+
+2. To unzip the zip file, type:
+
+    unzip char_lstm.zip -d char_lstm/
+
+3. The downloaded data contains President Obama's speeches. You can check the data format using following command:
+
+    head -10 obama.txt
+
+    You will get text like this:
+
+    Call to Renewal Keynote Address Call to Renewal Pt 1Call to Renewal Part 2 TOPIC: Our Past, Our Future & Vision for America June
+    28, 2006 Call to Renewal' Keynote Address Complete Text Good morning. I appreciate the opportunity to speak here at the Call to R
+    enewal's Building a Covenant for a New America conference. I've had the opportunity to take a look at your Covenant for a New Ame
+    rica. It is filled with outstanding policies and prescriptions for much of what ails this country. So I'd like to congratulate yo
+    u all on the thoughtful presentations you've given so far about poverty and justice in America, and for putting fire under the fe
+    et of the political leadership here in Washington.But today I'd like to talk about the connection between religion and politics a
+    nd perhaps offer some thoughts about how we can sort through some of the often bitter arguments that we've been seeing over the l
+    ast several years.I do so because, as you all know, we can affirm the importance of poverty in the Bible; and we can raise up and
+     pass out this Covenant for a New America. We can talk to the press, and we can discuss the religious call to address poverty and
+     environmental stewardship all we want, but it won't have an impact unless we tackle head-on the mutual suspicion that sometimes
+
+
+## Prepare the Data
+
+Now we define a few utility functions to pre-process the dataset. To prepare the data we need to create Utility functions called readContent, buildVocab and text2Id.
+These functions should take care of reading data from file, mapping each char into unique int id means building a vocabulary and encoding sentences with int ids.
+
+To prepare the data:
+
+1. Read the dataset with following function in scala:
+
+```scala
+    scala> import scala.io.Source
+    import scala.io.Source
+
+    scala> def readContent(path: String): String = Source.fromFile(path).mkString
+    readContent: (path: String)String
+
+```
+
+2. Build a vocabulary with following function:
+
+```scala
+    scala> // Build  a vocabulary of what char we have in the content
+    scala> def buildVocab(path: String): Map[String, Int] = {
+            val content = readContent(dataPath).split("\n")
+            var idx = 1 // 0 is left for zero padding
+            var theVocab = Map[String, Int]()
+            for (line <- content) {
+             for (char <- line) {
+               val key = s"$char"
+               if (!theVocab.contains(key)) {
+                 theVocab = theVocab + (key -> idx)
+                 idx += 1
+               }
+             }
+            }
+            theVocab
+           }
+
+           buildVocab: (path: String)Map[String,Int]
+```
+
+3. To assign each char with a special numerical id, use following function:
+
+```scala
+    scala> def text2Id(sentence: String, theVocab: Map[String, Int]): Array[Int] = {
+            val words = for (char <- sentence) yield theVocab(s"$char")
+            words.toArray
+          }
+
+          text2Id: (sentence: String, theVocab: Map[String,Int])Array[Int]
+```
+
+4. Now, build a char vocabulary from the dataset (obama.txt)
+
+```scala
+    scala> // Give your system path to the "obama.txt" we have downloaded using previous steps.
+    scala> val dataPath = "/Users/roshanin/char_lstm/obama.txt"
+    dataPath: String = /Users/roshanin/char_lstm/obama.txt
+
+    scala> val vocab = buildVocab(dataPath)
+
+    scala> vocab.size
+    res23: Int = 82
+```
+
+
+## Create the Model
+
+Now we create the a multi-layer LSTM model.
+
+To create the model:
+
+1. First load the helper files needed(Lstm.scala, BucketIo.scala, RnnModel.scala).
+Lstm.scala file contains definition of LSTM cell. BucketIo.scala file will be used to create a sentence iterator.  RnnModel.scala file will be used for model inference.
+
+To load files in scala command prompt, you can use syntax like (:load). These files can be found [here](https://github.com/dmlc/mxnet/tree/master/scala-package/examples/src/main/scala/ml/dmlc/mxnet/examples/rnn)
+
+```scala
+    scala> :load ../../../scala-package/examples/src/main/scala/ml/dmlc/mxnet/examples/rnn/Lstm.scala
+    scala> :load ../../../scala-package/examples/src/main/scala/ml/dmlc/mxnet/examples/rnn/BucketIo.scala
+    scala> :load ../../../scala-package/examples/src/main/scala/ml/dmlc/mxnet/examples/rnn/RnnModel.scala
+```
+
+2. Set LSTM hyperparameters
+
+```scala
+    scala> // We can support various length input
+    scala> // For this problem, we cut each input sentence to length of 129
+    scala> // So we only need fix length bucket
+    scala> val buckets = Array(129)
+    buckets: Array[Int] = Array(129)
+
+    scala> // hidden unit in LSTM cell
+    scala> val numHidden = 512
+    numHidden: Int = 512
+
+    scala> // embedding dimension, which is, map a char to a 256 dim vector
+    scala> val numEmbed = 256
+    numEmbed: Int = 256
+
+    scala> // number of lstm layer
+    scala> val numLstmLayer = 3
+    numLstmLayer: Int = 3
+
+    scala> // The batch size for training
+    scala> val batchSize = 32
+    batchSize: Int = 32
+```
+
+3. We will construct the LSTM network as a symbolic computation graph. Here, the model is unrolled explicitly in time for a fixed length.
+
+```scala
+    scala> // generate symbol for a length
+    scala> def symGen(seqLen: Int): Symbol = {
+        Lstm.lstmUnroll(numLstmLayer, seqLen, vocab.size + 1,
+                    numHidden = numHidden, numEmbed = numEmbed,
+                    numLabel = vocab.size + 1, dropout = 0.2f)
+      }
+    symGen: (seqLen: Int)ml.dmlc.mxnet.Symbol
+
+    scala> // create the network symbol
+    scala> val symbol = symGen(buckets(0))
+    symbol: ml.dmlc.mxnet.Symbol = ml.dmlc.mxnet.Symbol@3a589eed
+
+```      
+
+4. To train the model, First, we initialize states for LSTM and create a DataIterator which is responsible for grouping the data into different buckets. Even though BucketSentenceIter supports various length examples, we simply use the fixed length version here
+
+```scala
+    scala> // initalize states for LSTM
+    scala> val initC = for (l <- 0 until numLstmLayer) yield (s"l${l}_init_c", (batchSize, numHidden))
+    initC: scala.collection.immutable.IndexedSeq[(String, (Int, Int))] = Vector((l0_init_c,(32,512)), (l1_init_c,(32,512)), (l2_init_c,(32,512)))
+
+    scala> val initH = for (l <- 0 until numLstmLayer) yield (s"l${l}_init_h", (batchSize, numHidden))
+    initH: scala.collection.immutable.IndexedSeq[(String, (Int, Int))] = Vector((l0_init_h,(32,512)), (l1_init_h,(32,512)), (l2_init_h,(32,512)))
+
+    scala> val initStates = initC ++ initH
+    initStates: scala.collection.immutable.IndexedSeq[(String, (Int, Int))] = Vector((l0_init_c,(32,512)), (l1_init_c,(32,512)), (l2_init_c,(32,512)), (l0_init_h,(32,512)), (l1_init_h,(32,512)), (l2_init_h,(32,512)))
+
+    scala> val dataTrain = new BucketIo.BucketSentenceIter(dataPath, vocab, buckets,
+                                          batchSize, initStates, seperateChar = "\n",
+                                          text2Id = text2Id, readContent = readContent)
+    dataTrain: BucketIo.BucketSentenceIter = non-empty iterator
+
+```
+
+
+## Fit the Model
+
+<!--If appropriate, summarize the tasks required to create the model, defining and explaining key concepts. -->
+
+To fit the model, *provide explanation here.*
+
+<!-- Use a numbered procedure to explain how to fit the model. Add code snippets or blocks that show the code that the user must type or that is used for this task in the Jupyter Notebook. To include code snippets, precede each line of code with four spaces and two tick marks. Always introduce input or output with a description or context or result, followed by a colon. -->
+
+To fit the model:
+
+1. We can set over 100 epochs but for this demo, we will use 75 epochs.
+
+```scala
+    scala> import ml.dmlc.mxnet._
+    import ml.dmlc.mxnet._
+
+    scala> import ml.dmlc.mxnet.Callback.Speedometer
+    import ml.dmlc.mxnet.Callback.Speedometer
+
+    scala> import ml.dmlc.mxnet.optimizer.Adam
+    import ml.dmlc.mxnet.optimizer.Adam
+
+    scala> // and we will see result by training 75 epoch
+    scala> val numEpoch = 75
+    numEpoch: Int = 75
+
+    scala> // learning rate
+    scala> val learningRate = 0.001f
+    learningRate: Float = 0.001
+
+```
+
+2. Next we will define utility function for evaluation metric which calculate the negative log-likelihood during training.
+
+```scala
+    scala> def perplexity(label: NDArray, pred: NDArray): Float = {
+            val shape = label.shape
+            val size = shape(0) * shape(1)
+            val labelT = {
+              val tmp = label.toArray.grouped(shape(1)).toArray
+              val result = Array.fill[Float](size)(0f)
+              var idx = 0
+              for (i <- 0 until shape(1)) {
+                for (j <- 0 until shape(0)) {
+                  result(idx) = tmp(j)(i)
+                  idx += 1
+                }
+              }
+              result
+            }
+            var loss = 0f
+            val predArray = pred.toArray.grouped(pred.shape(1)).toArray
+            for (i <- 0 until pred.shape(0)) {
+              loss += -Math.log(Math.max(1e-10, predArray(i)(labelT(i).toInt)).toFloat).toFloat
+            }
+            loss / size
+            }
+
+    perplexity: (label: ml.dmlc.mxnet.NDArray, pred: ml.dmlc.mxnet.NDArray)Float
+
+    scala> def doCheckpoint(prefix: String): EpochEndCallback = new EpochEndCallback {
+                override def invoke(epoch: Int, symbol: Symbol,
+                                    argParams: Map[String, NDArray],
+                                    auxStates: Map[String, NDArray]): Unit = {
+                  Model.saveCheckpoint(prefix, epoch + 1, symbol, argParams, auxStates)
+                }
+            }
+
+    doCheckpoint: (prefix: String)ml.dmlc.mxnet.EpochEndCallback
+
+```
+
+3. Define initializer required for creating a model as follows:
+
+```scala
+    scala> val initializer = new Xavier(factorType = "in", magnitude = 2.34f)
+
+    initializer: ml.dmlc.mxnet.Xavier = ml.dmlc.mxnet.Xavier@54e8f10a
+
+```
+
+4. Now we have implemented all the supporting infrastructures for our char-lstm. To train the model, we just follow the standard high-level API. You can choose to train the model on single gpu or cpu by changing ".setContext(Array(Context.gpu(0),Context.gpu(1),Context.gpu(2),Context.gpu(3)))" to ".setContext(Array(Context.gpu(0)))"
+
+```scala
+    scala> val model = FeedForward.newBuilder(symbol)
+            .setContext(Array(Context.gpu(0),Context.gpu(1),Context.gpu(2),Context.gpu(3)))
+            .setNumEpoch(numEpoch)
+            .setOptimizer(new Adam(learningRate = learningRate, wd = 0.00001f))
+            .setInitializer(initializer)
+            .setTrainData(dataTrain)
+            .setEvalMetric(new CustomMetric(perplexity, name = "perplexity"))
+            .setBatchEndCallback(new Speedometer(batchSize, 20))
+            .setEpochEndCallback(doCheckpoint("obama"))
+            .build()
+
+    model: ml.dmlc.mxnet.FeedForward = ml.dmlc.mxnet.FeedForward@4926f6c7
+```
+
+## Model Inference
+
+We first define some utility functions to help us make inferences:
+
+```scala
+    scala> import scala.util.Random
+
+    scala> // helper strcuture for prediction
+    scala> def makeRevertVocab(vocab: Map[String, Int]): Map[Int, String] = {
+              var dic = Map[Int, String]()
+              vocab.foreach { case (k, v) =>
+                dic = dic + (v -> k)
+              }
+              dic
+            }
+
+  makeRevertVocab: (vocab: Map[String,Int])Map[Int,String]
+
+  scala> // make input from char
+  scala> def makeInput(char: Char, vocab: Map[String, Int], arr: NDArray): Unit = {
+          val idx = vocab(s"$char")
+          val tmp = NDArray.zeros(1)
+          tmp.set(idx)
+          arr.set(tmp)
+        }
+
+  makeInput: (char: Char, vocab: Map[String,Int], arr: ml.dmlc.mxnet.NDArray)Unit
+
+  scala> // helper function for random sample
+  scala> def cdf(weights: Array[Float]): Array[Float] = {
+            val total = weights.sum
+            var result = Array[Float]()
+            var cumsum = 0f
+            for (w <- weights) {
+              cumsum += w
+              result = result :+ (cumsum / total)
+            }
+            result
+          }
+
+  cdf: (weights: Array[Float])Array[Float]
+
+  scala> def choice(population: Array[String], weights: Array[Float]): String = {
+          assert(population.length == weights.length)
+          val cdfVals = cdf(weights)
+          val x = Random.nextFloat()
+          var idx = 0
+          var found = false
+          for (i <- 0 until cdfVals.length) {
+            if (cdfVals(i) >= x && !found) {
+              idx = i
+              found = true
+            }
+          }
+          population(idx)
+        }
+
+  choice: (population: Array[String], weights: Array[Float])String
+
+  scala> // we can use random output or fixed output by choosing largest probability
+  scala> def makeOutput(prob: Array[Float], vocab: Map[Int, String],
+                          sample: Boolean = false, temperature: Float = 1f): String = {
+             var idx = -1
+             val char = if (sample == false) {
+               idx = ((-1f, -1) /: prob.zipWithIndex) { (max, elem) =>
+                 if (max._1 < elem._1) elem else max
+               }._2
+               if (vocab.contains(idx)) vocab(idx)
+               else ""
+             } else {
+               val fixDict = Array("") ++ (1 until vocab.size + 1).map(i => vocab(i))
+               var scaleProb = prob.map(x => if (x < 1e-6) 1e-6 else if (x > 1 - 1e-6) 1 - 1e-6 else x)
+               var rescale = scaleProb.map(x => Math.exp(Math.log(x) / temperature).toFloat)
+               val sum = rescale.sum.toFloat
+               rescale = rescale.map(_ / sum)
+               choice(fixDict, rescale)
+             }
+             char
+           }
+
+  makeOutput: (prob: Array[Float], vocab: Map[Int,String], sample: Boolean, temperature: Float)String
+
+```
+
+2. Now we will build the inference model:
+
+```scala
+    scala> // load from check-point
+    scala> val (_, argParams, _) = Model.loadCheckpoint("obama", 75)
+
+    scala> // build an inference model
+    scala> val model = new RnnModel.LSTMInferenceModel(numLstmLayer, vocab.size + 1,
+                               numHidden = numHidden, numEmbed = numEmbed,
+                               numLabel = vocab.size + 1, argParams = argParams, ctx = Context.cpu(), dropout = 0.2f)
+
+    model: RnnModel.LSTMInferenceModel = RnnModel$LSTMInferenceModel@2f0c0319
+```
+
+3. Now we can generate a sequence of 1200 characters starting with "The United States"
+
+```scala
+
+    scala> val seqLength = 600
+    seqLength: Int = 600
+
+    scala> val inputNdarray = NDArray.zeros(1)
+    inputNdarray: ml.dmlc.mxnet.NDArray = ml.dmlc.mxnet.NDArray@9c231a24
+
+    scala> val revertVocab = makeRevertVocab(vocab)
+
+    scala> // Feel free to change the starter sentence
+
+    scala> var output = "The United States"
+    output: String = The United States
+
+    scala> val randomSample = true
+    randomSample: Boolean = true
+
+    scala> var newSentence = true
+    newSentence: Boolean = true
+
+    scala> val ignoreLength = output.length()
+    ignoreLength: Int = 17
+
+    scala> for (i <- 0 until seqLength) {
+            if (i <= ignoreLength - 1) makeInput(output(i), vocab, inputNdarray)
+            else makeInput(output.takeRight(1)(0), vocab, inputNdarray)
+            val prob = model.forward(inputNdarray, newSentence)
+            newSentence = false
+            val nextChar = makeOutput(prob, revertVocab, randomSample)
+            if (nextChar == "") newSentence = true
+            if (i >= ignoreLength) output = output ++ nextChar
+          }
+
+    scala> output
+
+    output
+    res7: String = The United States who have been blessed no companies would be proud that the challenges we face, it's not as directly untelle are in my daughters - you can afford -- life-saving march care and poor information and receiving battle against other speeces and lead its people. After champions of 2006, and because Africa in America, separate has been conferenced by children ation of discrimination, we remember all of this, succeeded in any other feelings of a palently better political process - at lliims being disability payment. All across all different mights of a more just a few global personal morality and industrialized ready to succeed.One can afford when the earliest days of a pension you can add to the system be confructive despair. They have starting in the demand for...
+
+```
+
+Check out more MXNet Scala examples below.
+
+## Next Steps
+* [Scala API](http://mxnet.io/api/scala/)
+* [More Scala Examples](https://github.com/dmlc/mxnet/tree/master/scala-package/examples/src/main/scala/ml/dmlc/mxnet/examples)
+* [MXNet tutorials index](http://mxnet.io/tutorials/index.html)
