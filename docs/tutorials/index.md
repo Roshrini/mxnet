@@ -148,6 +148,9 @@ Applications that use traditional methods to model classification and regression
 - [Handwritten Digit Classification](http://mxnet.io/tutorials/scala/mnist.html)
 *A simple example of classifying handwritten digits from the MNIST dataset using a multilayer perceptron.*
 
+- [Character Level LSTM](http://mxnet.io/tutorials/scala/char_lstm.html)
+*An example using an LSTM network to generate text, character by character, in the style of Barack Obama's speeches*
+
 
 ## Other Resources
 - [MXNet Code Examples](https://github.com/dmlc/mxnet/tree/master/example)
