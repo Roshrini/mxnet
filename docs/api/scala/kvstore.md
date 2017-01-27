@@ -16,7 +16,7 @@ Let's consider a simple example. It initializes
 a (`int`, `NDArray`) pair into the store, and then pulls the value out.
 
 ```scala
-    scala> val kv = KVStore.create("local") // create a local kv store.
+    scala> val kv = KVStore.create("local") // create a local kv store
     scala> val shape = Shape(2,3)
     scala> kv.init(3, NDArray.ones(shape)*2)
     scala> val a = NDArray.zeros(shape)
@@ -27,7 +27,7 @@ a (`int`, `NDArray`) pair into the store, and then pulls the value out.
 
 ### Push, Aggregation, and Updater
 
-For any key that's been initialized, you can push a new value with the same shape to the key.
+For any key that's been initialized, you can push a new value with the same shape to the key, as follows:
 
 ```scala
     scala> kv.push(3, NDArray.ones(shape)*8)
@@ -38,7 +38,7 @@ For any key that's been initialized, you can push a new value with the same shap
 
 The data that you want to push can be stored on any device. Furthermore, you can push multiple
 values into the same key, where KVStore first sums all of these
-values, and then pushes the aggregated value.
+values, and then pushes the aggregated value, as follows:
 
 ```scala
     scala> val gpus = Array(Context.gpu(0), Context.gpu(1), Context.gpu(2), Context.gpu(3))
@@ -50,7 +50,7 @@ values, and then pushes the aggregated value.
 ```
 
 For each push command, KVStore applies the pushed value to the value stored by a
-`updater`. The default updater is `ASSGIN`, and you can replace the default to
+`updater`. The default updater is `ASSIGN`. You can replace the default to
 control how data is merged.
 
 ```scala

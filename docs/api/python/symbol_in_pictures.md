@@ -42,7 +42,8 @@ To get the output results, given the bound NDArrays as input, you can call ```Ex
 
 ## Bind Multiple Outputs
 
-To group symbols, then bind them to get outputs of both, use ```mx.symbol.Group```.
+To group symbols, then bind them to
+get outputs of both, use ```mx.symbol.Group```.
 
 ![MultiOut](https://raw.githubusercontent.com/dmlc/web-data/master/mxnet/symbol/executor_multi_out.png)
 
@@ -71,6 +72,6 @@ Auxiliary states are just like arguments, except that you can't take the gradien
 
 ![SimpleBind](https://raw.githubusercontent.com/dmlc/web-data/master/mxnet/symbol/executor_aux_state.png)
 
-## More Information
+## Next Steps
 
 See [Symbolic API](symbol.md) and [Python Documentation](index.md).

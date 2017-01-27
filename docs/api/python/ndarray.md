@@ -13,13 +13,13 @@ Create `mxnet.ndarray` as follows:
     >>> a = mx.nd.zeros((100, 50))
     >>> # all-one array of dimension 256x32x128x1
     >>> b = mx.nd.ones((256, 32, 128, 1))
-    >>> # initialize array with contents
+    >>> # Initialize array with contents
     >>> c = mx.nd.array([[1, 2, 3], [4, 5, 6]])
 ```
 This is similar to the way you use `numpy`.
 ## NDArray Operations
 
-We provide some basic ndarray operations, like arithmetic and slice operations. 
+We provide some basic ndarray operations, like arithmetic and slice operations.
 
 ### Arithmetic Operations
 
@@ -61,8 +61,8 @@ MXNet NDArray provides an easy way to convert from or to `mxnet.ndarray` to or f
 
 ### Save and Load NDArray
 
-You can use pickle to save and load NDArrays.
-Or, you can use MXNet functions to save and load a list or dictionary of NDArrays from file systems.
+You can use Pickle to save and load NDArrays.
+Or, you can use MXNet functions to save and load a list or dictionary of NDArrays from file systems, as follows:
 
 ```python
     >>> import mxnet as mx

@@ -19,7 +19,7 @@ Create `mxnet.ndarray` as follows:
     scala> val a = NDArray.zeros(100, 50)
     scala> // all-one array of dimension 256x32x128x1
     scala> val b = NDArray.ones(256, 32, 128, 1)
-    scala> // initialize array with contents, you can specify dimensions of array using Shape parameter while creating array.
+    scala> // Initialize array with contents. You can specify dimensions of an array using the Shape parameter while creating array.
     scala> val c = NDArray.array(Array(1, 2, 3, 4, 5, 6), shape = Shape(2, 3))
 ```
 This is similar to the way you use `numpy`.
@@ -104,8 +104,7 @@ We provide some basic ndarray operations, like arithmetic and slice operations.
 
 ### Save and Load NDArray
 
-You can use pickle to save and load NDArrays.
-Or, you can use MXNet functions to save and load a list or dictionary of NDArrays from file systems.
+You can use MXNet functions to save and load a list or dictionary of NDArrays from file systems, as follows:
 
 ```scala
     scala> import ml.dmlc.mxnet._
@@ -125,7 +124,7 @@ The good thing about using the `save` and `load` interface is that you can use t
 
 ### Multi-Device Support
 
-Device information is stored in the `mxnet.Context` structure. When creating NDArray in MXNet, you can use either the context argument (the default is the CPU context) to create arrays on specific devices as follows:
+Device information is stored in the `mxnet.Context` structure. When creating NDArray in MXNet, you can use the context argument (the default is the CPU context) to create arrays on specific devices as follows:
 
 ```scala
     scala> import ml.dmlc.mxnet._

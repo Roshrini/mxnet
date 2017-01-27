@@ -1,52 +1,82 @@
-# Character-level language models
+# Developing a Character-level Language model
 
-This Scala tutorial shows how to train a character-level language model with a multilayer recurrent neural network. In particular, we will train a multilayer LSTM network that is able to generate President Obama's speeches.
+This tutorial shows how to train a character-level language model with a multilayer recurrent neural network (RNN) using Scala. The model takes one text file as input and trains a Recurrent Neural Network that learns to predict the next character in a sequence. In this, you train a multilayer LSTM(Long Short-Term Memory) network that generates next relevant text using President Obama's speech patterns.
 
-There are multiple blogposts which explains LSTM concepts beautifully. So, we won't go through detailed explanation here. If you are not familiar with the concept, please refer to following links first.
-- LSTM tutorial in [Julia](http://dmlc.ml/mxnet/2015/11/15/char-lstm-in-julia.html)
-- LSTM tutorial in [Python](https://github.com/dmlc/mxnet-notebooks/blob/master/python/tutorials/char_lstm.ipynb)
-- Christopher Olah's [Blogpost](http://colah.github.io/posts/2015-08-Understanding-LSTMs/)
+There are many documents that explain LSTM concepts. If you aren't familiar with LSTM, refer to the following before you proceed:
+- Christopher Olah's [Understanding LSTM blog post](http://colah.github.io/posts/2015-08-Understanding-LSTMs/)
+- [Training a LSTM char-rnn in Julia to Generate Random Sentences](http://dmlc.ml/mxnet/2015/11/15/char-lstm-in-julia.html)
+- [Bucketing in MXNet in Python](https://github.com/dmlc/mxnet-notebooks/blob/master/python/tutorials/char_lstm.ipynb)
 - [Bucketing in MXNet](http://mxnet.io/how_to/bucketing.html)
 
 ## How to Use This Tutorial
 
-1) You can run this tutorial from Scala command line by just copy pasting the code snippets given below. Please make appropriate file path changes.  
+There are two ways to use this tutorial:
 
-2) Refer to this link for running [LSTM Scala example](https://github.com/dmlc/mxnet/tree/master/scala-package/examples/src/main/scala/ml/dmlc/mxnet/examples/rnn)
-You can directly run this source code by running these [scripts](https://github.com/dmlc/mxnet/tree/master/scala-package/examples/scripts/rnn)
+1) Run it by copying the provided code snippets and pasting them into the Scala command line, making the appropriate changes to the input file path. You can also reuse this code and make changes to the parameters of your choice and run it from command line.
 
-You will accomplish the following by going through this tutorial:
+2) Directly run the source code((https://github.com/dmlc/mxnet/tree/master/scala-package/examples/src/main/scala/ml/dmlc/mxnet/examples/rnn)) by running [provided scripts](https://github.com/dmlc/mxnet/tree/master/scala-package/examples/scripts/rnn).
 
-- Build a LSTM network to learn from char only. At each time, input is a char.
-- Clean dataset
-- Train a model
-- Infer from the model. We will see this LSTM is able to learn words and grammers from sequence of chars.
+Here is how to run those scripts:
+- Build and train the model with [run_train_charrnn.sh script](https://github.com/dmlc/mxnet/blob/master/scala-package/examples/scripts/rnn/run_train_charrnn.sh)
+
+Edit the CLASS_PATH variable in the script, showing your OS specific folder (e.g. linux-x86_64-cpu/linux-x86_64-gpu/osx-x86_64-cpu) in the path. Run the script with the following command:
+
+```scala
+
+    bash run_train_charrnn.sh <which GPU card to use, -1 means CPU> <input data path> <location to save the model>
+
+    e.g.
+    bash run_train_charrnn.sh -1 ./datas/obama.txt ./models/obama
+
+```
+
+- Run inference with [run_test_charrnn.sh script](https://github.com/dmlc/mxnet/blob/master/scala-package/examples/scripts/rnn/run_test_charrnn.sh)
+
+Edit the CLASS_PATH variable in the script, showing your OS specific folder (e.g. linux-x86_64-cpu/linux-x86_64-gpu/osx-x86_64-cpu) in the path. Run the script with the following command:
+
+```scala
+
+    bash run_test_charrnn.sh <input data path> <trained model from previous script>
+
+    e.g.
+    bash run_test_charrnn.sh ./datas/obama.txt ./models/obama
+```
+
+In this tutorial, you will accomplish the following:
+
+-	Build an LSTM network that learns from the character level of Barack Obama's speeches. At each time, the input is a character.
+-	Clean up the dataset.
+-	Train a model.
+-	Fit the model.
+-	Build the inference model. This LSTM learn words and grammar from a sequence of characters.
 
 ## Prerequisites
 
 To complete this tutorial, you need:
 
-- Please do install MXNet on your machine. Follow specific instructions according to your specific OS [here](//http://mxnet.io/get_started/setup.html#overview)
-- Scala 2.11.8
-- Maven
+- MXNet. See the instructions for your operating system in [Setup and Installation](http://mxnet.io/get_started/setup.html#overview)
+- [Scala 2.11.8](https://www.scala-lang.org/download/2.11.8.html)
+- [Maven 3](https://maven.apache.org/install.html)
 
-## The Data
+## Download the Data
 
-We first download the dataset and check data format. We can download the data used in this tutorial from the [mxnet.io](http://data.mxnet.io/data/char_lstm.zip) site. To download the data:
+First, download the [dataset]. The data, which contains Barack Obama's speeches and is called obama.txt, is available at [mxnet.io](http://data.mxnet.io/data/char_lstm.zip)
 
-1) At the command prompt, type:
+To download the data:
+
+1) Download the dataset with the following command:
 
     ```scala
         wget http://data.mxnet.io/data/char_lstm.zip
     ```
 
-2) To unzip the zip file, type:
+2) Unzip the dataset with the following command:
 
     ```scala
         unzip char_lstm.zip -d char_lstm/
     ```
 
-3) The downloaded data contains President Obama's speeches. You can check the data format using following command:
+3) The downloaded data contains President Obama's speeches. You can have sneak peek into the dataset with the following command:
 
     ```scala
         head -10 obama.txt
@@ -69,25 +99,31 @@ We first download the dataset and check data format. We can download the data us
 
 ## Prepare the Data
 
-Now we define a few utility functions to pre-process the dataset. To prepare the data we need to create Utility functions called readContent, buildVocab and text2Id.
-These functions should take care of reading data from file, mapping each char into unique int id means building a vocabulary and encoding sentences with int ids.
+We define 3 utility functions namely - `readContent`, `buildVocab` and `text2Id`, to preprocess the dataset.
+
+* `readContent` - Read data from data file.
+* `buildVocab` - Map each char to a unique Integer ID i.e., build a vocabulary.
+* `text2Id` - Encode each sentence with an Integer ID.
+
+Then, use these utility functions to generate vocabulary from input text file(obama.txt).
 
 To prepare the data:
 
-1) Read the dataset with following function in scala:
+1) Read the dataset with the following function:
 
     ```scala
         scala> import scala.io.Source
 
         import scala.io.Source
 
+        scala> // Read file
         scala> def readContent(path: String): String = Source.fromFile(path).mkString
 
         readContent: (path: String)String
 
     ```
 
-2) Build a vocabulary with following function:
+2) Build a vocabulary with the following function:
 
     ```scala
         scala> // Build  a vocabulary of what char we have in the content
@@ -110,7 +146,7 @@ To prepare the data:
                buildVocab: (path: String)Map[String,Int]
     ```
 
-3) To assign each char with a special numerical id, use following function:
+3) To assign each character with a unique numerical ID, use the following function:
 
     ```scala
         scala> def text2Id(sentence: String, theVocab: Map[String, Int]): Array[Int] = {
@@ -121,12 +157,12 @@ To prepare the data:
               text2Id: (sentence: String, theVocab: Map[String,Int])Array[Int]
     ```
 
-4) Now, build a char vocabulary from the dataset (obama.txt)
+4) Now, build a character vocabulary from the dataset (obama.txt). Please change input filepath (dataPath) according to your machine.   
 
     ```scala
         scala> // Give your system path to the "obama.txt" we have downloaded using previous steps.
-        scala> val dataPath = "/Users/roshanin/char_lstm/obama.txt"
-        dataPath: String = /Users/roshanin/char_lstm/obama.txt
+        scala> val dataPath = "obama.txt"
+        dataPath: String = obama.txt
 
         scala> val vocab = buildVocab(dataPath)
 
@@ -135,14 +171,15 @@ To prepare the data:
     ```
 
 
-## Create the Model
+## Build a multi-layer LSTM model
 
-Now we create the a multi-layer LSTM model.
+Now, create a multi-layer LSTM model.
 
 To create the model:
 
-1) First load the helper files needed(Lstm.scala, BucketIo.scala, RnnModel.scala).
-Lstm.scala file contains definition of LSTM cell. BucketIo.scala file will be used to create a sentence iterator.  RnnModel.scala file will be used for model inference. To load files in Scala command prompt, you can use syntax like (:load). These files can be found [here](https://github.com/dmlc/mxnet/tree/master/scala-package/examples/src/main/scala/ml/dmlc/mxnet/examples/rnn)
+1) Load the helper files (`Lstm.scala`, `BucketIo.scala`, `RnnModel.scala`).
+`Lstm.scala` contains the definition of the LSTM cell. `BucketIo.scala` creates a sentence iterator.  `RnnModel.scala` is used for model inference. The helper files are available on the [MXNet site](https://github.com/dmlc/mxnet/tree/master/scala-package/examples/src/main/scala/ml/dmlc/mxnet/examples/rnn)
+To load them in Scala command prompt type:
 
     ```scala
         scala> :load ../../../scala-package/examples/src/main/scala/ml/dmlc/mxnet/examples/rnn/Lstm.scala
@@ -150,12 +187,12 @@ Lstm.scala file contains definition of LSTM cell. BucketIo.scala file will be us
         scala> :load ../../../scala-package/examples/src/main/scala/ml/dmlc/mxnet/examples/rnn/RnnModel.scala
     ```
 
-2) Set LSTM hyperparameters
+2) Set the LSTM hyperparameters as follows:
 
     ```scala
-        scala> // We can support various length input
-        scala> // For this problem, we cut each input sentence to length of 129
-        scala> // So we only need fix length bucket
+        scala> // We can support various input lengths.
+        scala> // For this problem, we cut each input sentence to a length of 129.
+        scala> // So we only need fix length bucket length.
         scala> val buckets = Array(129)
         buckets: Array[Int] = Array(129)
 
@@ -163,11 +200,11 @@ Lstm.scala file contains definition of LSTM cell. BucketIo.scala file will be us
         scala> val numHidden = 512
         numHidden: Int = 512
 
-        scala> // embedding dimension, which is, map a char to a 256 dim vector
+        scala> // The embedding dimension, which maps a char to a 256 dim vector
         scala> val numEmbed = 256
         numEmbed: Int = 256
 
-        scala> // number of lstm layer
+        scala> // The number of lstm layers
         scala> val numLstmLayer = 3
         numLstmLayer: Int = 3
 
@@ -176,7 +213,7 @@ Lstm.scala file contains definition of LSTM cell. BucketIo.scala file will be us
         batchSize: Int = 32
     ```
 
-3) We will construct the LSTM network as a symbolic computation graph. Here, the model is unrolled explicitly in time for a fixed length.
+3) Now, construct the LSTM network as a symbolic computation graph. Type the following to create a graph in which the model is unrolled for a fixed length explicitly in time.
 
     ```scala
         scala> // generate symbol for a length
@@ -193,11 +230,12 @@ Lstm.scala file contains definition of LSTM cell. BucketIo.scala file will be us
 
     ```      
 
-4) To train the model, First, we initialize states for LSTM and create a DataIterator which is responsible for grouping the data into different buckets. Even though BucketSentenceIter supports various length examples, we simply use the fixed length version here
+4) To train the model, initialize states for the LSTM and create a data iterator, which groups the data into different buckets.
+Note: BucketSentenceIter data iterator supports various length examples, however, we use only fixed length version in our example.
 
     ```scala
 
-        scala> // initalize states for LSTM
+        scala> // initialize states for LSTM
         scala> val initC = for (l <- 0 until numLstmLayer) yield (s"l${l}_init_c", (batchSize, numHidden))
 
         initC: scala.collection.immutable.IndexedSeq[(String, (Int, Int))] = Vector((l0_init_c,(32,512)), (l1_init_c,(32,512)), (l2_init_c,(32,512)))
@@ -218,10 +256,7 @@ Lstm.scala file contains definition of LSTM cell. BucketIo.scala file will be us
 
     ```
 
-
-## Fit the Model
-
-1) We can set over 100 epochs but for this demo, we will use 75 epochs.
+5) You can set more than 100 epochs, but for this tutorial, showing 75 epochs. Each epoch can take upto 4mins on GPU machine. You will be using [ADAM optimizer](http://mxnet.io/api/scala/docs/index.html#ml.dmlc.mxnet.optimizer.Adam) in this example.
 
     ```scala
         scala> import ml.dmlc.mxnet._
@@ -233,7 +268,7 @@ Lstm.scala file contains definition of LSTM cell. BucketIo.scala file will be us
         scala> import ml.dmlc.mxnet.optimizer.Adam
         import ml.dmlc.mxnet.optimizer.Adam
 
-        scala> // and we will see result by training 75 epoch
+        scala> // and we will see result by training 75 epochs
         scala> val numEpoch = 75
         numEpoch: Int = 75
 
@@ -243,7 +278,7 @@ Lstm.scala file contains definition of LSTM cell. BucketIo.scala file will be us
 
     ```
 
-2) Next we will define utility function for evaluation metric which calculate the negative log-likelihood during training.
+6) Define a utility function called perplexity for the evaluation metric to calculate the negative log-likelihood during training.
 
     ```scala
         scala> def perplexity(label: NDArray, pred: NDArray): Float = {
@@ -283,7 +318,7 @@ Lstm.scala file contains definition of LSTM cell. BucketIo.scala file will be us
 
     ```
 
-3) Define initializer required for creating a model as follows:
+7) Define the initializer that is required for creating a model as follows:
 
     ```scala
         scala> val initializer = new Xavier(factorType = "in", magnitude = 2.34f)
@@ -292,7 +327,7 @@ Lstm.scala file contains definition of LSTM cell. BucketIo.scala file will be us
 
     ```
 
-4) Now we have implemented all the supporting infrastructures for our char-lstm. To train the model, we just follow the standard high-level API. You can choose to train the model on single gpu or cpu by changing ".setContext(Array(Context.gpu(0),Context.gpu(1),Context.gpu(2),Context.gpu(3)))" to ".setContext(Array(Context.gpu(0)))"
+8) Now, you have implemented all the supporting infrastructures for the char-lstm model. To train the model, use the standard [MXNet high-level API](http://mxnet.io/api/scala/docs/index.html#ml.dmlc.mxnet.FeedForward). You can train the model on single GPU/CPU from multiple GPUs/CPUs by changing ```.setContext(Array(Context.gpu(0),Context.gpu(1),Context.gpu(2),Context.gpu(3)))``` to ```.setContext(Array(Context.gpu(0)))```
 
     ```scala
         scala> val model = FeedForward.newBuilder(symbol)
@@ -309,14 +344,27 @@ Lstm.scala file contains definition of LSTM cell. BucketIo.scala file will be us
         model: ml.dmlc.mxnet.FeedForward = ml.dmlc.mxnet.FeedForward@4926f6c7
     ```
 
-## Model Inference
+Now, you have model created and trained. You can use this model to create the inference.
 
-1) We first define some utility functions to help us make inferences:
+## Build the Inference Model
+
+After training the LSTM, you can now sample sentences from the trained model. The sampler works in the following way:
+- Take some fixed character (e.g. "The United States") feed it as a starting input to the LSTM.
+- The LSTM will produce an output distribution over the vocabulary and a state in the first time step. We sample a character from the output distribution, fix it as the second character.
+- In the next time step, we feed the previously sampled character as input and continue running the LSTM by also taking the previous states (instead of the 0 initial states).
+- Continue running until we sampled enough characters. Note we are running with mini-batches, so several sentences could be sampled simultaneously.
+
+1) First define some utility functions to help MXNet make inferences as follows:
+
+* makeRevertVocab - Revert key value in dictionary for easy access to character while prediction.
+* makeInput - Make input from given char.
+* cdf, choice - cdf is helper function for choice which is used to create random samples.
+* makeOutput - To use random output or fixed output by choosing largest probability.
 
     ```scala
         scala> import scala.util.Random
 
-        scala> // helper strcuture for prediction
+        scala> // helper structure for prediction
         scala> def makeRevertVocab(vocab: Map[String, Int]): Map[Int, String] = {
                   var dic = Map[Int, String]()
                   vocab.foreach { case (k, v) =>
@@ -393,7 +441,7 @@ Lstm.scala file contains definition of LSTM cell. BucketIo.scala file will be us
 
     ```
 
-2) Now we will build the inference model:
+2) Build the inference model:
 
     ```scala
         scala> // load from check-point
@@ -407,12 +455,12 @@ Lstm.scala file contains definition of LSTM cell. BucketIo.scala file will be us
         model: RnnModel.LSTMInferenceModel = RnnModel$LSTMInferenceModel@2f0c0319
     ```
 
-3) Now we can generate a sequence of 1200 characters starting with "The United States"
+3) Now you can generate a sequence of 1200 characters (you can select any number of characters you want) starting with "The United States" as follows:
 
     ```scala
 
-        scala> val seqLength = 600
-        seqLength: Int = 600
+        scala> val seqLength = 1200
+        seqLength: Int = 1200
 
         scala> val inputNdarray = NDArray.zeros(1)
         inputNdarray: ml.dmlc.mxnet.NDArray = ml.dmlc.mxnet.NDArray@9c231a24
@@ -448,6 +496,10 @@ Lstm.scala file contains definition of LSTM cell. BucketIo.scala file will be us
         res7: String = The United States who have been blessed no companies would be proud that the challenges we face, it's not as directly untelle are in my daughters - you can afford -- life-saving march care and poor information and receiving battle against other speeces and lead its people. After champions of 2006, and because Africa in America, separate has been conferenced by children ation of discrimination, we remember all of this, succeeded in any other feelings of a palently better political process - at lliims being disability payment. All across all different mights of a more just a few global personal morality and industrialized ready to succeed.One can afford when the earliest days of a pension you can add to the system be confructive despair. They have starting in the demand for...
 
     ```
+
+
+You can see the generated output from Obama's speeches above. Note all the line-breaks, punctuations and upper-lower case letters are produced by the sampler itself. I did not do any post-processing.
+
 
 Check out more MXNet Scala examples below.
 
