@@ -18,9 +18,9 @@ Apache Spark is the distributed big data processing framework built around speed
 
 There can be two use cases to explain how you can use Spark and a cluster of machines to increase efficiency of deep learning algorithms with MXNet.
 
-* Data processing with Spark and training with MXNet : We can leverage Spark for its lightening fast execution engine and in-memory computing to do big data processing. Program will take input as RDDs and then, feed the data to do distributed training using MXNet.
+* Data processing in Spark and distributed training with MXNet : We can leverage Spark for its lightening fast execution engine and in-memory computing to do big data processing. Program will take input as RDDs and then, feed the data to do distributed training using MXNet.
 
-* Deploying models at scale: Use Spark to apply a pre-trained neural network model on a large amount of data for inference.
+* Running pre-trained models: Use Spark to apply a pre-trained neural network model on a large amount of data for inference.
 
 In this way, Users can write their deep learning applications as standard Spark programs, which can directly run on top of existing Spark cluster. By leveraging an existing distributed batch processing framework, MXNet can train neural nets quickly and efficiently.
 
@@ -86,7 +86,7 @@ e.g.,
       --conf spark.speculation=false \
       --class ml.dmlc.mxnet.spark.example.ClassificationExample \
       --name mxnet --driver-memory 1g --executor-memory 1g --num-executors 2 --executor-cores 1 \
-      --jars /path-to-mxnet-jar,spark-jar, \
+      --jars /path-to-mxnet-jar,spark-jar \
       /target/mxnet-spark_2.11-0.1.2-SNAPSHOT.jar \
       ${RUN_OPTS}
 ```
