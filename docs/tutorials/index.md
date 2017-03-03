@@ -155,6 +155,11 @@ Applications that use traditional methods to model classification and regression
 
 ### Scala
 
+#### Get Started
+- [MXNet Scala from IntelliJ](http://mxnet.io/tutorials/scala/mxnet_scala_on_intellij.html)
+*How to create MXNet Scala example or application from IntelliJ IDE.*
+
+#### Applications
 - [Handwritten Digit Classification](http://mxnet.io/tutorials/scala/mnist.html)
 *A simple example of classifying handwritten digits from the MNIST dataset using a multilayer perceptron.*
 
