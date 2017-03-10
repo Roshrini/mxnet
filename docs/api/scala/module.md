@@ -1,10 +1,10 @@
 # Module API
-The module API provides an intermediate and high-level interface for performing computation with neural networks in MXNet. A *module* is an instance of subclasses of the `BaseModule`. The most widely used module class is simply called `Module`, which wraps a `Symbol` and one or more `Executors`. For a full list of functions, see  `BaseModule`.
-Each subclass of modules might have some extra interface functions. In this topic, we provide some examples of common use cases. All of the module APIs are in the `Module` namespace.
+The module API provides an intermediate and high-level interface for performing computation with neural networks in MXNet. A *module* is an instance of subclasses of the `BaseModule`. The most widely used module class is called `Module`. Module wraps a `Symbol` and one or more `Executors`. For a full list of functions, see `BaseModule`.
+A subclass of modules might have extra interface functions. This topic provides some examples of common use cases. All of the module APIs are in the `Module` namespace.
 
 ## Preparing a Module for Computation
 
-To construct a module, refer to the constructors for the specific module class. For example, the `Module` class accepts a `Symbol` as the input:
+To construct a module, refer to the constructors for the module class. For example, the `Module` class accepts a `Symbol` as input:
 
 ```scala
     import ml.dmlc.mxnet._
@@ -23,16 +23,17 @@ To construct a module, refer to the constructors for the specific module class. 
     val mod = new Module(out)
 ```
 
-Also specify the `data_names` and `label_names` of your `Symbol`. We'll skip those parameters because our `Symbol` follows naming conventions, so the default behavior (data named as `data`, and label named as `softmax_label`) is okay. `context`, which by default is the CPU, is another important parameter. You can specify a GPU context or even a list of GPU contexts if you need data parallelization.
+By default, `context` is the CPU. If you need data parallelization, you can specify a GPU context or an array of GPU contexts.
 
 Before you can compute with a module, you need to call `bind()` to allocate the device memory and `initParams()` or `SetParams()` to initialize the parameters.
+If you simply want to fit a module, you don't need to call `bind()` and `initParams()` explicitly, because the fit() function automatically calls them if they are needed.
 
 ```scala
     mod.bind(dataShapes = train_dataiter.provideData, labelShapes = Some(train_dataiter.provideLabel))
     mod.initParams()
 ```
 
-Now you can compute with the module using functions like `forward()`, `backward()`, etc. If you simply want to fit a module, you don't need to call `bind()` and `initParams()` explicitly, because the `fit()` function automatically calls them if they are needed.
+Now you can compute with the module using functions like `forward()`, `backward()`, etc.
 
 ## Training, Predicting, and Evaluating
 
@@ -47,13 +48,13 @@ Modules provide high-level APIs for training, predicting, and evaluating. To fit
     .setOptimizer(new SGD(learningRate = 0.1f, momentum = 0.9f, wd = 0.0001f)))
 ```
 
-The interface is very similar to the old `FeedForward` class. You can pass in batch-end callbacks using `setBatchEndCallback` and epoch-end callbacks using `setEpochEndCallback`. You can also set parameters using methods like `setOptimizer`, `setEvalMetric`. To know more about the `FitParams()`, check [API page](http://mxnet.io/api/scala/docs/index.html#ml.dmlc.mxnet.module.FitParams). To predict with a module, call `predict()` with a `DataIter`:
+The interface is very similar to the old `FeedForward` class. You can pass in batch-end callbacks using `setBatchEndCallback` and epoch-end callbacks using `setEpochEndCallback`. You can also set parameters using methods like `setOptimizer` and `setEvalMetric`. To learn more about the `FitParams()`, see the [API page](http://mxnet.io/api/scala/docs/index.html#ml.dmlc.mxnet.module.FitParams). To predict with a module, call `predict()` with a `DataIter`:
 
 ```scala
     mod.predict(val_dataiter)
 ```
 
-The module collects and returns all of the prediction results. For more details about the format of the return values, see the documentation for the `predict()` function.
+The module collects and returns all of the prediction results. For more details about the format of the return values, see the documentation for the [`predict()` function](http://mxnet.io/api/scala/docs/index.html#ml.dmlc.mxnet.module.BaseModule).
 
 When prediction results might be too large to fit in memory, use the `predictEveryBatch` API:
 
@@ -106,8 +107,7 @@ To resume training from a saved checkpoint, instead of calling `setParams()`, di
     setAuxParams(auxParams).setBeginEpoch(beginEpoch))
 ```
 
-Create object of FitParams() class and then use it to call `setBeginEpoch()` method to pass `beginEpoch` so that `fit()` knows to resume from a saved epoch.
-
+Create an object of the `FitParams()` class, and then use it to call the `setBeginEpoch()` method to pass `beginEpoch` so that `fit()` knows to resume from a saved epoch.
 
 ## Next Steps
 * See [Model API](model.md) for an alternative simple high-level interface for training neural networks.
