@@ -33,7 +33,7 @@ class _Conv(HybridBlock):
         If padding is non-zero, then the input is implicitly zero-padded
         on both sides for padding number of points
     dilation: int or tuple/list of n ints,
-        Specifys the dilation rate to use for dilated convolution.
+        Specify the dilation rate to use for dilated convolution.
     groups : int
         controls the connections between inputs and outputs.
         At groups=1, all inputs are convolved to all outputs.
@@ -119,7 +119,7 @@ class Conv1D(_Conv):
     it is applied to the outputs as well.
 
     If `in_channels` is not specified, `Parameter` initialization will be
-    defered to the first time `forward` is called and `in_channels` will be
+    deferred to the first time `forward` is called and `in_channels` will be
     inferred from the shape of input data.
 
 
@@ -226,7 +226,7 @@ class Conv2D(_Conv):
         'W' dimensions.
     in_channels : int, default 0
         The number of input channels to this layer. If not specified,
-        initialization will be defered to the first time `forward` is called
+        initialization will be deferred to the first time `forward` is called
         and `in_channels` will be inferred from the shape of input data.
     activation : str
         Activation function to use. See :func:`mx.nd.Activation`.
@@ -275,7 +275,7 @@ class Conv3D(_Conv):
     `activation` is not `None`, it is applied to the outputs as well.
 
     If `in_channels` is not specified, `Parameter` initialization will be
-    defered to the first time `forward` is called and `in_channels` will be
+    deferred to the first time `forward` is called and `in_channels` will be
     inferred from the shape of input data.
 
     Parameters
@@ -305,7 +305,7 @@ class Conv3D(_Conv):
         'H' and 'W' dimensions.
     in_channels : int, default 0
         The number of input channels to this layer. If not specified,
-        initialization will be defered to the first time `forward` is called
+        initialization will be deferred to the first time `forward` is called
         and `in_channels` will be inferred from the shape of input data.
     activation : str
         Activation function to use. See :func:`mx.nd.Activation`.

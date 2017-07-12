@@ -126,7 +126,7 @@ class SoftmaxCrossEntropyLoss(HybridBlock):
     label's shape should be output's shape without the `axis` dimension. i.e. for
     output.shape = (1,2,3,4) and axis = 2, label.shape should be (1,2,4)
 
-    If sparse_label is False, label should cantain probability distribution
+    If sparse_label is False, label should contain probability distribution
     with the same shape as output:
 
     .. math::

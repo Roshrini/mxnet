@@ -30,7 +30,7 @@ class Sequential(Block):
 
 
 class HSequential(HybridBlock):
-    """Stack `HybridBlock`s sequentially.
+    """Stacks `HybridBlock`s sequentially.
 
     Example::
 
@@ -82,7 +82,7 @@ class Dense(HybridBlock):
         Initializer for the bias vector.
     in_units : int, optional
         Size of input data. If not specified, initialization will be
-        defered to the first time `forward` is called and `in_units`
+        deferred to the first time `forward` is called and `in_units`
         will be inferred from the shape of input data.
     prefix : str or None
         See document of `Block`.
@@ -91,10 +91,10 @@ class Dense(HybridBlock):
 
 
     Input shape:
-        a 2D input with shape `(batch_size, in_units)`.
+        A 2D input with shape `(batch_size, in_units)`.
 
     Output shape:
-        the output would have shape `(batch_size, units)`.
+        The output would have shape `(batch_size, units)`.
     """
     def __init__(self, units, activation=None, use_bias=True,
                  weight_initializer=None, bias_initializer=None,
@@ -133,6 +133,7 @@ class Activation(HybridBlock):
         name of activation function to use.
         See :func:`~mxnet.ndarray.Activation` for available choices.
 
+
     Input shape:
         Arbitrary.
 
@@ -161,6 +162,13 @@ class Dropout(HybridBlock):
     rate : float
         Fraction of the input units to drop. Must be a number between 0 and 1.
 
+
+    Input shape:
+        Arbitrary.
+
+    Output shape:
+        Same shape as input.
+
     References
     ----------
         `Dropout: A Simple Way to Prevent Neural Networks from Overfitting
@@ -176,7 +184,7 @@ class Dropout(HybridBlock):
 
 class BatchNorm(HybridBlock):
     """Batch normalization layer (Ioffe and Szegedy, 2014).
-    Normalize the input at each batch, i.e. applies a transformation
+    Normalizes the input at each batch, i.e. applies a transformation
     that maintains the mean activation close to 0 and the activation
     standard deviation close to 1.
 
@@ -210,6 +218,13 @@ class BatchNorm(HybridBlock):
         Number of channels (feature maps) in input data. If not specified,
         initialization will be defered to the first time `forward` is called
         and `in_channels` will be inferred from the shape of input data.
+
+
+    Input shape:
+        Arbitrary.
+
+    Output shape:
+        Same shape as input.
     """
     def __init__(self, axis=1, momentum=0.9, epsilon=1e-3, center=True, scale=True,
                  beta_initializer='zeros', gamma_initializer='ones',
@@ -246,6 +261,13 @@ class LeakyReLU(HybridBlock):
     ----------
     alpha : float
         slope coefficient for the negative half axis. Must be >= 0.
+
+
+    Input shape:
+        Arbitrary.
+
+    Output shape:
+        Same shape as input.
     """
     def __init__(self, alpha, **kwargs):
         super(LeakyReLU, self).__init__(**kwargs)

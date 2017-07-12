@@ -14,6 +14,8 @@ These tutorials introduce a few fundamental concepts in deep learning and how to
    foo/autograd
    foo/foo
    foo/hybrid
+   foo/mnist
+   foo/word_embeddings
 ```
 
 ### Advanced -- Low-level interface
