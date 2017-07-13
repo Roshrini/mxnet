@@ -8,6 +8,10 @@ used model architectures to produce distributed words representation.
 We will also implement one of the most widely used word2vec algorithm, called
 "Continuous bag of words"(CBOW).
 
+In creating this tutorial, I've borrowed heavily from PyTorch:
+
+[Word Embeddings using Pytorch](http://pytorch.org/tutorials/beginner/nlp/word_embeddings_tutorial.html)
+
 ## Prerequisites
 To complete this tutorial, we need:  
 
