@@ -19,25 +19,25 @@
 from .import_onnx import GraphProto
 
 def import_from(graph, format):
-    #     """Load onnx graph which is a python protobuf object in to nnvm graph.
-    #     The companion parameters will be handled automatically.
-    #     The inputs from onnx graph is vague, only providing "1", "2"...
-    #     For convenience, we rename the `real` input names to "input_0",
-    #     "input_1"... And renaming parameters to "param_0", "param_1"...
-    #
-    #     Parameters
-    #     ----------
-    #     graph : protobuf object
-    #         ONNX graph
-    #
-    #     Returns
-    #     -------
-    #     sym : mx.symbol
-    #         Compatible mxnet symbol
-    #
-    #     params : dict of str to mx.ndarray
-    #         Dict of converted parameters stored in mx.ndarray format
-    #     """
+    """Load onnx graph which is a python protobuf object in to nnvm graph.
+    The companion parameters will be handled automatically.
+    The inputs from onnx graph is vague, only providing "1", "2"...
+    For convenience, we rename the `real` input names to "input_0",
+    "input_1"... And renaming parameters to "param_0", "param_1"...
+
+    Parameters
+    ----------
+    graph : protobuf object
+        ONNX graph
+
+    Returns
+    -------
+    sym : mx.symbol
+        Compatible mxnet symbol
+
+    params : dict of str to mx.ndarray
+        Dict of converted parameters stored in mx.ndarray format
+    """
     if format == 'onnx':
         g = GraphProto()
         sym, params = g.from_onnx(graph)

@@ -20,13 +20,14 @@ import os
 import mxnet as mx
 import onnx
 import numpy as np
-
 from mxnet.serde import serde
 
+# load protobuf format
 def _as_abs_path(fname):
     cur_dir = os.path.abspath(os.path.dirname(__file__))
     return os.path.join(cur_dir, fname)
 
+# download test image
 def download(url, path, overwrite=False):
     import urllib2, os
     if os.path.exists(path) and not overwrite:
@@ -36,20 +37,17 @@ def download(url, path, overwrite=False):
         f.write(urllib2.urlopen(url).read())
 
 onnx_graph = onnx.load(_as_abs_path('super_resolution.onnx'))
-# sym, params = import_onnx.from_onnx(onnx_graph)
-# print sym.list_arguments()
-
 sym, params = serde.import_from(onnx_graph, 'onnx')
-print sym
+print sym, sym.list_arguments()
 
 #Load test image
-# from PIL import Image
-# img_url = 'https://github.com/dmlc/mxnet.js/blob/master/data/cat.png?raw=true'
-# download(img_url, 'cat.png')
-# img = Image.open('cat.png').resize((224, 224))
-# img_ycbcr = img.convert("YCbCr")  # convert to YCbCr
-# img_y, img_cb, img_cr = img_ycbcr.split()
-# x = np.array(img_y)[np.newaxis, np.newaxis, :, :]
+from PIL import Image
+img_url = 'https://github.com/dmlc/mxnet.js/blob/master/data/cat.png?raw=true'
+download(img_url, 'cat.png')
+img = Image.open('cat.png').resize((224, 224))
+img_ycbcr = img.convert("YCbCr")  # convert to YCbCr
+img_y, img_cb, img_cr = img_ycbcr.split()
+x = np.array(img_y)[np.newaxis, np.newaxis, :, :]
 
 # create module
 # mod = mx.mod.Module(symbol=sym, data_names=['input_0'], context=mx.cpu(), label_names=None)
