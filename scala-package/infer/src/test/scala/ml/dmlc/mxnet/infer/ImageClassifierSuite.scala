@@ -18,17 +18,13 @@
 package ml.dmlc.mxnet.infer
 
 import ml.dmlc.mxnet._
-import ml.dmlc.mxnet.module.Module
-import ml.dmlc.mxnet.io.NDArrayIter
 import ml.dmlc.mxnet.{DType, DataDesc, Shape}
+
 import org.mockito.Matchers._
 import org.mockito.Mockito
-import org.scalatest.{BeforeAndAfterAll, FunSuite, Ignore}
+import org.scalatest.{BeforeAndAfterAll, Ignore}
 import java.awt.Image
 import java.awt.image.BufferedImage
-import java.io.File
-import java.nio.file.{Files, Paths}
-import java.util
 
 class ImageClassifierSuite extends ClassifierSuite with BeforeAndAfterAll {
 
@@ -77,16 +73,8 @@ class ImageClassifierSuite extends ClassifierSuite with BeforeAndAfterAll {
 
     val inputImage = new BufferedImage(224, 224, BufferedImage.TYPE_INT_RGB)
 
-//    val predictResult : IndexedSeq[Array[Float]] =
-//      IndexedSeq[Array[Float]](Array(.98f, 0.97f, 0.96f, 0.99f))
-
-//    val predictResultND: NDArray = NDArray.array(predictResult.flatten.toArray, Shape(1, 4))
-
     val testImageClassifier: ImageClassifier =
       new MyImageClassifier(modelPath, inputDescriptor)
-//    val image2 = testImageClassifier.getScaledImage(inputImage, 224, 224)
-//
-//    val inputImageND = testImageClassifier.getPixelsFromImage(image2)
 
 //    Mockito.doReturn(predictResult).when(testImageClassifier.predictor)
 //      .predictWithNDArray(any(classOf[IndexedSeq[NDArray]]))

@@ -144,6 +144,7 @@ class ImageClassifier(modelPathPrefix: String,
     * @param topK Get top k elements with maximum probability
     * @return List of list of tuples of (class, probability)
     */
+  // [TODO] change to batched ndarrays to improve performance
   def classifyImageBatch(inputBatch: Traversable[BufferedImage], topK: Option[Int] = None):
   List[List[(String, Float)]] = {
     val result = ListBuffer[List[(String, Float)]]()
