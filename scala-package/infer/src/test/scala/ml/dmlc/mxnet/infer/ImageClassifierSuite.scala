@@ -38,12 +38,12 @@ class ImageClassifierSuite extends ClassifierSuite with BeforeAndAfterAll {
 
     override def getPredictor(modelPathPrefix: String,
       inputDescriptors: IndexedSeq[DataDesc]): PredictBase = {
-      Mockito.mock(classOf[MyClassyPredictor])
+      Mockito.mock(classOf[MyClassyPredictor], Mockito.RETURNS_DEEP_STUBS)
     }
 
     override def getClassifier(modelPathPrefix: String, inputDescriptors: IndexedSeq[DataDesc]):
-    Classifier = {
-      Mockito.mock(classOf[Classifier])
+      Classifier = {
+      Mockito.mock(classOf[Classifier], Mockito.RETURNS_DEEP_STUBS)
     }
   }
 
@@ -69,7 +69,7 @@ class ImageClassifierSuite extends ClassifierSuite with BeforeAndAfterAll {
 
     val result = testImageClassifier.getPixelsFromImage(image2)
 
-   // assert(result.getClass === NDArray.getClass)
+   // assert()
   }
 
   test("testWithInputImage") {
@@ -77,22 +77,28 @@ class ImageClassifierSuite extends ClassifierSuite with BeforeAndAfterAll {
 
     val inputImage = new BufferedImage(224, 224, BufferedImage.TYPE_INT_RGB)
 
-    val predictResult : IndexedSeq[Array[Float]] =
-      IndexedSeq[Array[Float]](Array(.98f, 0.97f, 0.96f, 0.99f))
+//    val predictResult : IndexedSeq[Array[Float]] =
+//      IndexedSeq[Array[Float]](Array(.98f, 0.97f, 0.96f, 0.99f))
+
+//    val predictResultND: NDArray = NDArray.array(predictResult.flatten.toArray, Shape(1, 4))
 
     val testImageClassifier: ImageClassifier =
       new MyImageClassifier(modelPath, inputDescriptor)
+//    val image2 = testImageClassifier.getScaledImage(inputImage, 224, 224)
+//
+//    val inputImageND = testImageClassifier.getPixelsFromImage(image2)
 
-  //  val spy = Mockito.spy(testImageClassifier)
+//    Mockito.doReturn(predictResult).when(testImageClassifier.predictor)
+//      .predictWithNDArray(any(classOf[IndexedSeq[NDArray]]))
+//
+    val predictResultOp : List[(String, Float)] =
+            List[(String, Float)](("n04960277 black, blackness, inkiness", .10908251f))
 
-    Mockito.doReturn(predictResult).when(testImageClassifier.classifier)
-      .classifyWithNDArray(any(classOf[IndexedSeq[NDArray]]))
+    Mockito.doReturn(IndexedSeq(predictResultOp)).when(testImageClassifier.classifier)
+      .classifyWithNDArray(any(classOf[IndexedSeq[NDArray]]), Some(anyInt()))
 
-    val result = testImageClassifier.classifyImage(inputImage)
+    val result: List[(String, Float)] = testImageClassifier.classifyImage(inputImage, Some(1))
 
-    //    assertResult(predictResult(0)) {
-//      result.map(_._2).toArray
-//    }
   }
 
   test("testWithInputBatchImage") {
