@@ -18,16 +18,13 @@
 package ml.dmlc.mxnet.infer
 
 import ml.dmlc.mxnet._
-
-import java.awt.Image
-import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.ImageIO
+// scalastyle:off
+import java.awt.image.BufferedImage
+// scalastyle:on
 
-import scala.io
 import scala.collection.mutable.ListBuffer
-import java.io.IOException
-import scala.io.Source
 
 /**
   * A class for classifier tasks
@@ -123,7 +120,7 @@ class ImageClassifier(modelPathPrefix: String,
     * @return List of list of tuples of (class, probability)
     */
   def classifyImage(inputImage: BufferedImage,
-                        topK: Option[Int] = None): List[(String, Float)] = {
+                        topK: Option[Int] = None): IndexedSeq[List[(String, Float)]] = {
 
     val width = inputDescriptors(0).shape(2)
     val height = inputDescriptors(0).shape(3)
@@ -135,7 +132,7 @@ class ImageClassifier(modelPathPrefix: String,
 
     val output = super.classifyWithNDArray(input, topK)
 
-    output(0)
+    IndexedSeq(output(0))
   }
 
   /**
@@ -149,7 +146,7 @@ class ImageClassifier(modelPathPrefix: String,
   List[List[(String, Float)]] = {
     val result = ListBuffer[List[(String, Float)]]()
     for (image <- inputBatch) {
-      result += this.classifyImage(image, topK)
+      result += this.classifyImage(image, topK)(0)
     }
     result.toList
   }

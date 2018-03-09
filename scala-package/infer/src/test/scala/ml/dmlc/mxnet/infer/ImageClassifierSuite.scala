@@ -18,12 +18,11 @@
 package ml.dmlc.mxnet.infer
 
 import ml.dmlc.mxnet._
-import ml.dmlc.mxnet.{DType, DataDesc, Shape}
+import ml.dmlc.mxnet.{DataDesc, Shape}
 
 import org.mockito.Matchers._
 import org.mockito.Mockito
-import org.scalatest.{BeforeAndAfterAll, Ignore}
-import java.awt.Image
+import org.scalatest.{BeforeAndAfterAll}
 import java.awt.image.BufferedImage
 
 class ImageClassifierSuite extends ClassifierSuite with BeforeAndAfterAll {
@@ -34,12 +33,12 @@ class ImageClassifierSuite extends ClassifierSuite with BeforeAndAfterAll {
 
     override def getPredictor(modelPathPrefix: String,
       inputDescriptors: IndexedSeq[DataDesc]): PredictBase = {
-      Mockito.mock(classOf[MyClassyPredictor], Mockito.RETURNS_DEEP_STUBS)
+      Mockito.mock(classOf[MyClassyPredictor])
     }
 
     override def getClassifier(modelPathPrefix: String, inputDescriptors: IndexedSeq[DataDesc]):
       Classifier = {
-      Mockito.mock(classOf[Classifier], Mockito.RETURNS_DEEP_STUBS)
+      Mockito.mock(classOf[Classifier])
     }
   }
 
@@ -76,16 +75,29 @@ class ImageClassifierSuite extends ClassifierSuite with BeforeAndAfterAll {
     val testImageClassifier: ImageClassifier =
       new MyImageClassifier(modelPath, inputDescriptor)
 
-//    Mockito.doReturn(predictResult).when(testImageClassifier.predictor)
-//      .predictWithNDArray(any(classOf[IndexedSeq[NDArray]]))
-//
+    val predictResult: IndexedSeq[Array[Float]] =
+      IndexedSeq[Array[Float]](Array(.98f, 0.97f, 0.96f, 0.99f))
+
+    val predictResultND: NDArray = NDArray.array(predictResult.flatten.toArray, Shape(1, 4))
+
     val predictResultOp : List[(String, Float)] =
-            List[(String, Float)](("n04960277 black, blackness, inkiness", .10908251f))
+            List[(String, Float)](("class1 label1", .98f), ("class2 label2", .97f),
+              ("class3 label3", .96f), ("class4 label4", .99f))
+
+    Mockito.doReturn(IndexedSeq(predictResultND)).when(testImageClassifier.predictor)
+      .predictWithNDArray(any(classOf[IndexedSeq[NDArray]]))
 
     Mockito.doReturn(IndexedSeq(predictResultOp)).when(testImageClassifier.classifier)
       .classifyWithNDArray(any(classOf[IndexedSeq[NDArray]]), Some(anyInt()))
 
-    val result: List[(String, Float)] = testImageClassifier.classifyImage(inputImage, Some(1))
+    val result: IndexedSeq[List[(String, Float)]] =
+      testImageClassifier.classifyImage(inputImage, Some(4))
+
+    for(i <- predictResult.indices) {
+      assertResult(predictResult(i).sortBy(-_)) {
+        result(i).map(_._2).toArray
+      }
+    }
 
   }
 

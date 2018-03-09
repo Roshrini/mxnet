@@ -23,8 +23,7 @@ import org.slf4j.LoggerFactory
 
 import ml.dmlc.mxnet.{DType, DataDesc}
 import ml.dmlc.mxnet.infer._
-import java.io.File
-import javax.imageio.ImageIO
+
 import scala.collection.JavaConverters._
 
 object ImageClassifierExample {
@@ -63,11 +62,10 @@ object ImageClassifierExample {
       }
 
       val imgList = imgClassifier.loadInputBatch(inputImageDir)
-      val outputList = imgClassifier.classifyImageBatch(imgList, Some(5))
+      val outputList = imgClassifier.classifyImageBatch(imgList, Some(4))
 
       for (i <- outputList) {
-        for (j <- i)
-          printf("Class with probability=%s \n", j)
+          printf("Class with probability=%s \n", i)
       }
 
     } catch {
@@ -82,9 +80,9 @@ object ImageClassifierExample {
 
 class ImageClassifierExample {
   @Option(name = "--model-dir", usage = "the input model directory")
-  private val modelPathPrefix: String = "/Users/roshanin/Downloads/resnet/resnet-152"
+  private val modelPathPrefix: String = "/resnet/resnet-152"
   @Option(name = "--input-image", usage = "the input image")
-  private val inputImagePath: String = "/Users/roshanin/Downloads/images/Cat-hd-wallpapers.jpg"
+  private val inputImagePath: String = "/images/Cat-hd-wallpapers.jpg"
   @Option(name = "--input-dir", usage = "the input batch of images directory")
-  private val inputImageDir: String = "/Users/roshanin/Downloads/images/"
+  private val inputImageDir: String = "/images/"
 }
