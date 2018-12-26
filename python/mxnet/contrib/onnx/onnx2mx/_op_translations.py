@@ -714,3 +714,54 @@ def spacetodepth(attrs, inputs, proto_obj):
     new_attrs = translation_utils._fix_attribute_names(attrs, {'blocksize':'block_size'})
 
     return "space_to_depth", new_attrs, inputs
+
+def rnn(attrs, inputs, proto_obj):
+    """RNN operators"""
+    # X
+    data = inputs[0]
+    # W, R, B
+    if len(inputs)>3 and inputs[3].name == 'B':
+        parameters = symbol.concat(inputs[1], inputs[2], inputs[3])
+    else:
+        parameters = symbol.concat(inputs[1], inputs[2])
+
+    for i in inputs:
+        if i.name == 'initial_h':
+            new_inputs = [data, parameters, i]
+        else:
+            new_inputs = [data, parameters]
+
+    new_attrs = translation_utils._fix_attribute_names(attrs, {'hidden_size': 'state_size'})
+    new_attrs = translation_utils._add_extra_attributes(new_attrs, {'num_layers': 1})
+    new_attrs = translation_utils._add_extra_attributes(new_attrs, {'state_outputs': True})
+    direction = attrs.get('direction', 'forward')
+
+    if direction == 'bidirectional':
+        new_attrs = translation_utils._add_extra_attributes(new_attrs, {'bidirectional', 1})
+
+    if 'activation' in attrs:
+        activations = attrs.get('activations')
+    elif direction == 'bidirectional':
+        activations = ['Tanh', 'Tanh']
+    else:
+        activations = 'Tanh'
+
+    supported_activations = ['relu', 'tanh']
+    mode = 'rnn_tanh'
+    if direction == 'bidirectional':
+        if activations[0] == activations[1] and \
+                activations[0].lower() in supported_activations:
+            mode = 'rnn_' + activations[0].lower()
+        else:
+            raise NotImplementedError("MXNet's RNN supports only relu and tanh "
+                                      "activation functions")
+    else:
+        if activations.lower() in supported_activations:
+            mode = 'rnn_' + activations.lower()
+        else:
+            raise NotImplementedError("MXNet's RNN supports only relu and tanh "
+                                      "activation functions")
+
+    new_attrs.update(mode=mode)
+    return "RNN", new_attrs, new_inputs
+
